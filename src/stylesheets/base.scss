@@ -1,0 +1,37 @@
+$var: rgb(100, 100, 100);
+
+body {
+  font-family: 'Questrial';
+  font-size: 20pt;
+  background-image: url(background.png);
+  background-repeat: no-repeat;
+}
+
+ul {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-family: "Covered By Your Grace";
+}
+
+li a:hover {
+  background-color: #111;
+}

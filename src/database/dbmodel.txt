@@ -1,0 +1,7 @@
+Table name: Subscriptions
+
+Columns:
+PK (GUID, Not Null) ex. 658416217890920846
+Email_Address (varchar) ex. "bob@hotmail.com"
+Lists (varchar) ex. "15|25|50|400"
+

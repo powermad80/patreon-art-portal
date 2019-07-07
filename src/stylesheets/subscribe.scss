@@ -1,0 +1,65 @@
+#subscribe {
+    margin-top: 10%;
+    text-align: center;
+    color: white;
+}
+
+input {
+    border: 3px solid black;
+    border-radius: 5px;
+    opacity: 0.5;
+    padding: 12px;
+    width: 300px;
+    font-family: 'Open Sans';
+    font-size: 16pt;
+}
+
+#subscribe {
+    margin: auto;
+    margin-top: 10%;
+    padding: 10px;
+    border: 3px solid white;
+    border-radius: 5px;
+    background-color: rgba(44, 44, 44, 0.8);
+    width: 60%;
+}
+
+#options {
+    margin: auto;
+    width: 700px;
+    font-family: "Questrial";
+}
+
+#subSubmit {
+    cursor: pointer;
+    padding: 12px;
+    width: 200px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: rgb(80, 80, 80);
+    opacity: 0.75;
+    border: 3px solid black;
+    
+    font-size: 20pt;
+    color: white;
+}
+
+.option {
+    cursor: pointer;
+    display: inline-block;
+    border-radius: 5px;
+    background-color: rgb(80, 80, 80);
+    opacity: 0.75;
+    border: 3px solid white;
+    width: 300px;
+    padding: 12px;
+    margin: 10px;
+}
+
+h1, h3 {
+    margin: 0;
+}
+
+h3 {
+    margin-bottom: 1%;
+}

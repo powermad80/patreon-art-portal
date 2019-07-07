@@ -1,0 +1,25 @@
+#home {
+  text-align: center;
+  margin: auto;
+  color: white;
+}
+
+.homebutton {
+  border: 3px solid white;
+  cursor: pointer;
+  background-color: black;//rgb(100, 100, 100);
+  color: white;
+  border-radius: 25px;
+  height: 300px;
+  margin: 5px;
+  margin-top: 7%;
+  width: 170px;
+  font-weight: bold;
+  font-family: 'Covered By Your Grace';
+  font-size: 20pt;
+  transition: all 0s ease-in-out;
+}
+
+button:hover {
+  box-shadow: 0 5px 15px white;
+}
