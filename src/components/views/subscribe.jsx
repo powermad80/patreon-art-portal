@@ -67,7 +67,7 @@ export default class Subscribe extends Component {
         body: JSON.stringify(dispatch)
     })
         .then(res => res.json())
-        .then(res => {alert(res.text)});
+        .then(res => {Swal.fire(res.text)});
 
   }
 
@@ -84,6 +84,7 @@ export default class Subscribe extends Component {
         <input onChange={(e) => {this.setState({email: e.target.value})}} type={"text"} placeholder={"email address"}></input>
         <div id={"options"}>{this.renderOptions()}</div>
         <button onClick={() => this.validate()} id={"subSubmit"}>Submit</button>
+        <h6>Your selections will automatically overwrite any previous subscriptions</h6>
       </div>
     );
   }

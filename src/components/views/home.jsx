@@ -3,7 +3,7 @@ import { browserHistory } from 'react-router';
 
 export default class Home extends Component {
   componentDidMount() {
-    browserHistory.push('/');
+    browserHistory.push('/subscribe');
   }
   render() {
     return (
