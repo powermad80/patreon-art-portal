@@ -2,14 +2,5 @@
 deployment:
     tasks:
     - export DEPLOYPATH=/home/thebacka/public_html/sr/patreon/
-    - /bin/cp -R src $DEPLOYPATH
-    - /bin/cp app.js $DEPLOYPATH
-    - /bin/cp data.db $DEPLOYPATH
-    - /bin/cp index.html $DEPLOYPATH
-    - /bin/cp package-lock.json $DEPLOYPATH
-    - /bin/cp package.json $DEPLOYPATH
-    - /bin/cp Procfile $DEPLOYPATH
-    - /bin/cp webpack.config.dev.js $DEPLOYPATH
-    - /bin/cp webpack.config.js $DEPLOYPATH
-    - $DEPLOYPATH npm install
-    - $DEPLOYPATH npm install node-sass
+    - touch test.txt
+    - /bin/cp test.txt $DEPLOYPATH
