@@ -32,12 +32,12 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin()
   ],
   devServer: {
-    port: 5000,
+    port: 2222,
     historyApiFallback: true,
     contentBase: './',
     proxy: {
       open: true,
-      '/api': 'http://localhost:5000'
+      '/api': 'http://localhost:2222'
     }
   }
 };

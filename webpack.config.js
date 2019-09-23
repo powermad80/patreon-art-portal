@@ -36,12 +36,12 @@ module.exports = {
     new ExtractTextPlugin({ filename: 'app.css', allChunks: true })
   ],
   devServer: {
-    port: 8080,
+    port: 2223,
     historyApiFallback: true,
     contentBase: './',
     proxy: {
       open: true,
-      '/api': 'http://localhost:5000'
+      '/api': 'http://localhost:2222'
     }
   }
 };

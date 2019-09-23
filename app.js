@@ -168,11 +168,11 @@ app.get('*', function(req, res) {
   res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
-app.listen(process.env.PORT || 5000, function(err) {
+app.listen(process.env.PORT || 2222, function(err) {
   if (err) {
     console.log(err);
     return;
   }
 
-  console.log('Listening at http://localhost:5000');
+  console.log('Listening at http://localhost:2222');
 });
