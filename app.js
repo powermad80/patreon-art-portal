@@ -3,16 +3,16 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var webpack = require('webpack');
 var config = require('./webpack.config.dev.js');
-var $ = require('cheerio');
-var request = require('request');
 var fs = require('fs');
+var patreon = require('patreon');
+var Datastore = require('nedb-promises');
 const nodemailer = require('nodemailer');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./data.db');
-const tiers = ["$15 or more per month (sold out!)", "$25 or more per month (sold out!)", "$50 or more per month (sold out!)", "$100 or more per month (sold out!)", "$400 or more per month (sold out!)"];
+const got = require('got');
 
 var app = express();
 var compiler = webpack(config);
+var db = Datastore.create({ filename: 'data.db', autoload: true });
+db.persistence.setAutocompactionInterval(1000 * 60 * 60 * 24);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -24,53 +24,116 @@ app.use(require('webpack-dev-middleware')(compiler, {
   publicPath: config.output.publicPath
 }));
 
+app.post('/api/checksubs', async function(req, res){
+
+  let rawdata = fs.readFileSync('sec.json');
+  var auth = JSON.parse(rawdata);
+  patreonOAuthClient = patreon.oauth(auth.id, auth.sec);
+  
+  patreonOAuthClient.refreshToken(auth.refresh).then(response => {
+    var tokens = response;
+    console.log(tokens);
+    auth.refresh = tokens.refresh_token;
+    let newData = JSON.stringify(auth);
+    fs.writeFileSync('sec.json', newData);
+
+    request({
+      url: 'https://www.patreon.com/api/oauth2/v2/campaigns/149848?include=tiers&fields%5Btier%5D=title,remaining',
+      headers : {
+        Authorization: 'Bearer ' + tokens.access_token
+      }
+    }, (err, result, body) => {
+      if (err) return console.log(err);
+      body = JSON.parse(body);
+      var tierlist = body.included;
+      for (i = 0; i < tierlist.length; i++)
+      {
+        console.log(tierlist[i].attributes);
+      }
+    });
+
+  }).catch(err => {
+    console.log(err);
+  });
+  
+  res.sendStatus(200);
+});
+
+async function GetTokens()
+{
+  let rawdata = fs.readFileSync('sec.json');
+  var auth = JSON.parse(rawdata);
+  patreonOAuthClient = patreon.oauth(auth.id, auth.sec);
+
+  patreonOAuthClient.refreshToken(auth.refresh).then(response => {
+    var tokens = response;
+    console.log(tokens);
+    auth.refresh = tokens.refresh_token;
+    let newData = JSON.stringify(auth);
+    fs.writeFileSync('sec.json', newData);
+    return tokens;
+
+  }).catch(err => {
+    console.log(err);
+    return {access_token: "err"};
+});
+}
+
+async function GetAvailableTiers(access_token)
+{
+  var apiUrl = 'https://www.patreon.com/api/oauth2/v2/campaigns/149848?include=tiers&fields%5Btier%5D=title,remaining';
+  var data = await got(apiUrl, {
+    headers: {
+      Authorization: 'Bearer ' + access_token
+    }
+  });
+  var body = JSON.parse(data);
+  return body;
+}
+
+async function UpdateSubscriptions(address, selected)
+{
+  var result;
+  if (selected[0].includes("Unsubscribe"))
+  {
+    result = await db.remove({ email: address }, { multi: true });
+    console.log(result);
+    return {text: "You have been unsubscribed from all lists."};
+  }
+  
+  result = await db.update({ email: address }, { tiers: selected });
+  if (result == 1) 
+  {
+    return {text: "Your preferences have been updated."};
+  }
+
+  var sub = 
+  {
+    email: address,
+    tiers: selected
+  };
+
+  await db.insert({ doc: sub });
+  return {text: "Your preferences have been saved."}; 
+
+}
+
+function GetSubscriptions(tiers)
+{
+
+}
+
 app.post('/api/subscribe', function(req, res){
   var email = req.body.email;
-  var sql;
-  var sqlEnd;
-  db.run("DELETE FROM SUBSCRIPTIONS WHERE Email = '" + email + "'");
-  
-  if (req.body.selected.length > 0 && req.body.selected[0].includes("Unsubscribe"))
-  {
-    res.send({text: "You have unsubscribed from all lists."});
-    return;
-  }
-
-  for (i = 0; i < req.body.selected.length; i++)
-  {
-    if (req.body.selected[i].includes("15"))
-    {
-      sqlEnd = 15;
-    }
-    else if (req.body.selected[i].includes("25"))
-    {
-      sqlEnd = 25;
-    }
-    else if (req.body.selected[i].includes("50"))
-    {
-      sqlEnd = 50;
-    }
-    else if (req.body.selected[i].includes("100"))
-    {
-      sqlEnd = 100;
-    }
-    else if (req.body.selected[i].includes("400"))
-    {
-      sqlEnd = 400;
-    }
-
-    sql = "INSERT INTO SUBSCRIPTIONS (Email, Tier) VALUES ('v1', v2)";
-    sql = sql.replace("v1", email).replace('v2', sqlEnd);
-    db.run(sql);
-  }
-  res.send({text: "Your preferences have been updated."});
+  let response = await this.UpdateSubscription(email.toLowerCase(), req.body.selected);
+  res.send(response);
 });
 
 app.post('/api/subModify', function(req, res){
   res.status(200);
   res.send();
   
-  request.get('https://www.patreon.com/rtil', function (err, res, body) {
+  request.get('https://www.patreon.com/rtil/posts', function (err, res, body) {
     var parsedHTML = $.load(body);
     var tiersAvailable = [];
     var sql;

@@ -3,3 +3,5 @@ node_modules
 *.sql
 
 *.db
+
+sec.json
