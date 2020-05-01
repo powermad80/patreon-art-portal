@@ -29,7 +29,7 @@
     "got": "^10.7.0",
     "jquery": "^3.4.1",
     "jsonapi-datastore": "^0.4.0-beta",
-    "nedb": "^1.8.0",
+    "nedb-promise": "^2.0.1",
     "nedb-promises": "^4.0.3",
     "node-sass": "^4.12.0",
     "nodemailer": "^6.3.0",

@@ -94,14 +94,14 @@ async function GetAvailableTiers(access_token)
 async function UpdateSubscriptions(address, selected)
 {
   var result;
+  result = await db.find({email: address});
   if (selected[0].includes("Unsubscribe"))
   {
     result = await db.remove({ email: address }, { multi: true });
-    console.log(result);
     return {text: "You have been unsubscribed from all lists."};
   }
   
-  result = await db.update({ email: address }, { tiers: selected });
+  result = await db.update({ email: address }, { $set: { tiers: selected } });
   if (result == 1) 
   {
     return {text: "Your preferences have been updated."};
@@ -113,7 +113,7 @@ async function UpdateSubscriptions(address, selected)
     tiers: selected
   };
 
-  await db.insert({ doc: sub });
+  result = await db.insert(sub);
   return {text: "Your preferences have been saved."}; 
 
 }
@@ -123,65 +123,16 @@ function GetSubscriptions(tiers)
 
 }
 
-app.post('/api/subscribe', function(req, res){
+app.post('/api/subscribe', async function(req, res){
   var email = req.body.email;
-  let response = await this.UpdateSubscription(email.toLowerCase(), req.body.selected);
+  let response = await UpdateSubscriptions(email.toLowerCase(), req.body.selected);
   res.send(response);
 });
 
 app.post('/api/subModify', function(req, res){
   res.status(200);
   res.send();
-  
-  request.get('https://www.patreon.com/rtil/posts', function (err, res, body) {
-    var parsedHTML = $.load(body);
-    var tiersAvailable = [];
-    var sql;
-
-    for (i = 0; i < tiers.length; i++)
-    {
-      if (!parsedHTML.text().includes(tiers[i]))
-      {
-        tiersAvailable.push(tiers[i]);
-      }
-    }
-
-    var j;
-    var mailText;
-    for (i = 0; i < tiersAvailable.length; i++)
-    {
-      j = tiers.indexOf(tiersAvailable[i]);
-      switch(j)
-      {
-        case 0:
-          j = 15;
-          mailText = "$15 - The Ballot Box ";
-          break;
-
-        case 1:
-          j = 25;
-          mailText = "$25 - Sketch Requests ";
-          break;
-
-        case 2:
-          j = 50;
-          mailText = "$50 - Critique ";
-          break;
-
-        case 3:
-          j = 100;
-          mailText = "$100 - Online Class ";
-          break;
-
-        case 4:
-          j = 400;
-          mailText = "$400 - Exclusive Commissions ";
-          break;
-      }
-
-      sql = "SELECT email, tier FROM SUBSCRIPTIONS WHERE tier = " + j;
-      db.each(sql, function(err, row) 
-      {
+  /*
         let transporter = nodemailer.createTransport({
           host: 'REPLACEME',
           port: '465',
@@ -198,34 +149,9 @@ app.post('/api/subModify', function(req, res){
           text: getMailText(row.Tier) + "has just become available on rtil's Patreon!"
         }
         transporter.sendMail(mail);
-      });
-
-    }
-
-  });
+    */
 
 });
-
-function getMailText(tier)
-{
-  switch(tier)
-      {
-        case 15:
-          return "$15 - The Ballot Box ";
-
-        case 25:
-          return "$25 - Sketch Requests ";
-
-        case 50:
-          return "$50 - Critique ";
-
-        case 100:
-          return "$100 - Online Class ";
-
-        case 400:
-          return "$400 - Exclusive Commissions ";
-      }
-}
 
 app.get('*', function(req, res) {
   res.sendFile(path.resolve(__dirname, 'index.html'));
