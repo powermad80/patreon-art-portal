@@ -30,31 +30,17 @@ app.post('/api/checksubs', async function(req, res){
   var auth = JSON.parse(rawdata);
   patreonOAuthClient = patreon.oauth(auth.id, auth.sec);
   
-  patreonOAuthClient.refreshToken(auth.refresh).then(response => {
-    var tokens = response;
-    console.log(tokens);
-    auth.refresh = tokens.refresh_token;
-    let newData = JSON.stringify(auth);
-    fs.writeFileSync('sec.json', newData);
+  var tokens = await patreonOAuthClient.refreshToken(auth.refresh);
+  console.log(tokens);
+  auth.refresh = tokens.refresh_token;
+  let newData = JSON.stringify(auth);
+  fs.writeFileSync('sec.json', newData);
 
-    request({
-      url: 'https://www.patreon.com/api/oauth2/v2/campaigns/149848?include=tiers&fields%5Btier%5D=title,remaining',
-      headers : {
-        Authorization: 'Bearer ' + tokens.access_token
-      }
-    }, (err, result, body) => {
-      if (err) return console.log(err);
-      body = JSON.parse(body);
-      var tierlist = body.included;
-      for (i = 0; i < tierlist.length; i++)
-      {
-        console.log(tierlist[i].attributes);
-      }
-    });
-
-  }).catch(err => {
-    console.log(err);
-  });
+  var tierlist = await GetAvailableTiers(tokens.access_token);
+    for (i = 0; i < tierlist.length; i++)
+    {
+      console.log(tierlist[i].attributes);
+    }
   
   res.sendStatus(200);
 });
@@ -65,40 +51,49 @@ async function GetTokens()
   var auth = JSON.parse(rawdata);
   patreonOAuthClient = patreon.oauth(auth.id, auth.sec);
 
-  patreonOAuthClient.refreshToken(auth.refresh).then(response => {
-    var tokens = response;
-    console.log(tokens);
-    auth.refresh = tokens.refresh_token;
-    let newData = JSON.stringify(auth);
-    fs.writeFileSync('sec.json', newData);
-    return tokens;
-
-  }).catch(err => {
-    console.log(err);
-    return {access_token: "err"};
-});
+  var tokens = await patreonOAuthClient.refreshToken(auth.refresh);
+  auth.refresh = tokens.refresh_token;
+  let newData = JSON.stringify(auth);
+  fs.writeFileSync('sec.json', newData);
+  return tokens;
 }
 
 async function GetAvailableTiers(access_token)
 {
   var apiUrl = 'https://www.patreon.com/api/oauth2/v2/campaigns/149848?include=tiers&fields%5Btier%5D=title,remaining';
-  var data = await got(apiUrl, {
+  var site = await got(apiUrl, {
     headers: {
       Authorization: 'Bearer ' + access_token
     }
   });
-  var body = JSON.parse(data);
-  return body;
+  var data = JSON.parse(site.body);
+  var tiers = [];
+
+  for (var i = 0; i < data.included.length; i++)
+  {
+    if (data.included[i].attributes.remaining > 0)
+    {
+      tiers.push(data.included[i].attributes.title);
+    }
+  }
+
+  return tiers;
 }
 
 async function UpdateSubscriptions(address, selected)
 {
+  var j;
   var result;
-  result = await db.find({email: address});
   if (selected[0].includes("Unsubscribe"))
   {
     result = await db.remove({ email: address }, { multi: true });
     return {text: "You have been unsubscribed from all lists."};
+  }
+
+  for (var i = 0; i < selected.length; i++)
+  {
+    j = selected[i].indexOf('(');
+    selected[i] = selected[i].substring(0, j - 1);
   }
   
   result = await db.update({ email: address }, { $set: { tiers: selected } });
@@ -118,9 +113,49 @@ async function UpdateSubscriptions(address, selected)
 
 }
 
-function GetSubscriptions(tiers)
+async function GetSubscriptions(tierlist)
 {
+  return await db.find( { tiers: { $in: tierlist } });
+}
 
+async function SendMail(emails, tiers)
+{
+  var mail;
+  let transporter = nodemailer.createTransport({
+    host: 'REPLACEME',
+    port: '465',
+    secure: true,
+    auth: {
+      user: 'REPLACEME',
+      pass: 'REPLACEME'
+    }
+  });
+
+
+  for (var i = 0; i < emails.length; i++)
+  {
+    mail = {
+      from: 'REPLACEME',
+      to: emails[i].email,
+      subject: "A Patreon tier you're waiting for is available!",
+      text: GetMailText(emails[i], tiers)
+    }
+    transporter.sendMail(mail);
+  }
+}
+
+function GetMailText(email, tiers)
+{
+  var text = "The following tier(s) have become available on rtil's Patreon: \n";
+  for (var i = 0; i < email.tiers.length; i++)
+  {
+    if (tiers.indexOf(email.tiers[i]) != -1)
+    {
+      text = text + email.tiers[i] + "\n";
+    }
+  }
+
+  return text;
 }
 
 app.post('/api/subscribe', async function(req, res){
@@ -132,24 +167,7 @@ app.post('/api/subscribe', async function(req, res){
 app.post('/api/subModify', function(req, res){
   res.status(200);
   res.send();
-  /*
-        let transporter = nodemailer.createTransport({
-          host: 'REPLACEME',
-          port: '465',
-          secure: true,
-          auth: {
-            user: 'REPLACEME',
-            pass: 'REPLACEME'
-          }
-        });
-        var mail = {
-          from: 'REPLACEME',
-          to: row.Email,
-          subject: "A sketch tier you're waiting for is available!",
-          text: getMailText(row.Tier) + "has just become available on rtil's Patreon!"
-        }
-        transporter.sendMail(mail);
-    */
+
 
 });
 
