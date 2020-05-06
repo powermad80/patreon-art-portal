@@ -45,6 +45,13 @@ app.post('/api/checksubs', async function(req, res){
   res.sendStatus(200);
 });
 
+async function NotifySubscribers()
+{
+  var availableTiers = await GetAvailableTiers(await GetTokens());
+  var subscribers = await GetSubscriptions(availableTiers);
+  await SendMail(subscribers, availableTiers);
+}
+
 async function GetTokens()
 {
   let rawdata = fs.readFileSync('sec.json');
@@ -55,7 +62,7 @@ async function GetTokens()
   auth.refresh = tokens.refresh_token;
   let newData = JSON.stringify(auth);
   fs.writeFileSync('sec.json', newData);
-  return tokens;
+  return tokens.access_token;
 }
 
 async function GetAvailableTiers(access_token)
@@ -120,14 +127,17 @@ async function GetSubscriptions(tierlist)
 
 async function SendMail(emails, tiers)
 {
+  let rawdata = fs.readFileSync('email.json');
+  var auth = JSON.parse(rawdata);
+
   var mail;
   let transporter = nodemailer.createTransport({
-    host: 'REPLACEME',
-    port: '465',
+    host: auth.host,
+    port: auth.port,
     secure: true,
     auth: {
-      user: 'REPLACEME',
-      pass: 'REPLACEME'
+      user: auth.email,
+      pass: auth.pass
     }
   });
 
@@ -135,7 +145,7 @@ async function SendMail(emails, tiers)
   for (var i = 0; i < emails.length; i++)
   {
     mail = {
-      from: 'REPLACEME',
+      from: auth.email,
       to: emails[i].email,
       subject: "A Patreon tier you're waiting for is available!",
       text: GetMailText(emails[i], tiers)
@@ -167,7 +177,7 @@ app.post('/api/subscribe', async function(req, res){
 app.post('/api/subModify', function(req, res){
   res.status(200);
   res.send();
-
+  NotifySubscribers();
 
 });
 
