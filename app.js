@@ -47,9 +47,16 @@ app.post('/api/checksubs', async function(req, res){
 
 async function NotifySubscribers()
 {
-  var availableTiers = await GetAvailableTiers(await GetTokens());
-  var subscribers = await GetSubscriptions(availableTiers);
-  await SendMail(subscribers, availableTiers);
+  try 
+  {
+    var availableTiers = await GetAvailableTiers(await GetTokens());
+    var subscribers = await GetSubscriptions(availableTiers);
+    await SendMail(subscribers, availableTiers);
+  }
+  catch (err)
+  {
+    SendErrorEmail(err);
+  }
 }
 
 async function GetTokens()
@@ -123,6 +130,33 @@ async function UpdateSubscriptions(address, selected)
 async function GetSubscriptions(tierlist)
 {
   return await db.find( { tiers: { $in: tierlist } });
+}
+
+function SendErrorEmail(err)
+{
+  let rawdata = fs.readFileSync('email.json');
+  var auth = JSON.parse(rawdata);
+
+  let transporter = nodemailer.createTransport({
+    host: auth.host,
+    port: auth.port,
+    secure: true,
+    auth: {
+      user: auth.email,
+      pass: auth.pass
+    }
+  });
+
+  var mail = {
+    from: auth.email,
+    to: auth.err,
+    subject: "Unexpected error occurred in rtil subscription site",
+    text: err
+  }
+
+  transporter.sendMail(mail);
+  return;
+
 }
 
 async function SendMail(emails, tiers)
