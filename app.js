@@ -202,12 +202,12 @@ function GetMailText(email, tiers)
   return text;
 }
 
-var job = schedule.scheduleJob('* * 1 * * *', async function() {
+var job = schedule.scheduleJob('0 0 1 * * *', async function() {
   try 
   {
     console.log("ping");
     await GetTokens();
-    db.load();
+    await db.loadDatabase();
   }
   catch (err)
   {
