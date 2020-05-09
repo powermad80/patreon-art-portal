@@ -5,6 +5,7 @@ var webpack = require('webpack');
 var config = require('./webpack.config.dev.js');
 var fs = require('fs');
 var patreon = require('patreon');
+var schedule = require('node-schedule');
 var Datastore = require('nedb-promises');
 const nodemailer = require('nodemailer');
 const got = require('got');
@@ -12,7 +13,6 @@ const got = require('got');
 var app = express();
 var compiler = webpack(config);
 var db = Datastore.create({ filename: 'data.db', autoload: true });
-db.persistence.setAutocompactionInterval(1000 * 60 * 60 * 24);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -202,6 +202,19 @@ function GetMailText(email, tiers)
   return text;
 }
 
+var job = schedule.scheduleJob('* * 1 * * *', async function() {
+  try 
+  {
+    console.log("ping");
+    await GetTokens();
+    db.load();
+  }
+  catch (err)
+  {
+    SendErrorEmail(err);
+  }
+})
+
 app.post('/api/subscribe', async function(req, res){
   var email = req.body.email;
   let response = await UpdateSubscriptions(email.toLowerCase(), req.body.selected);
@@ -209,10 +222,11 @@ app.post('/api/subscribe', async function(req, res){
 });
 
 app.post('/api/subModify', function(req, res){
+  setTimeout(function() {
+    NotifySubscribers();
+  }, 30 * 1000);
   res.status(200);
   res.send();
-  NotifySubscribers();
-
 });
 
 app.get('*', function(req, res) {
