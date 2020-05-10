@@ -1,3 +1,3 @@
 # patreon-art-portal
 
-A work-in-progress website used to manage a client's art requests relating to their clients' patreon tiers, and an email subscription page to notify of patron tier slot availability.
+A simple website used to allow interested users of a Patreon creator to be notified by email when a limited slot tier they desire becomes available.
