@@ -219,7 +219,6 @@ function GetMailText(email, tiers)
 var job = schedule.scheduleJob('0 0 1 * * *', async function() {
   try 
   {
-    console.log("ping");
     await GetTokens();
     await db.loadDatabase();
   }
