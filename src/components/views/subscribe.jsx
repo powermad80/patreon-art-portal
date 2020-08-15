@@ -9,7 +9,7 @@ export default class Subscribe extends Component {
         this.state = {
             email: "",
             selected: [],
-            campaigns: ["The Ballot Box ($15)", "Sketch Requests ($25)", "Critique ($50)", "Online class ($100)", "Exclusive Commissions ($400)", "Unsubscribe from all email lists"]
+            campaigns: ["Nomination ($15)", "Sketch Request ($30)", "Critique ($50)", "Online Class ($100)", "Exclusive Commission ($400)", "Unsubscribe from all email lists"]
         }
         this.renderOptions.bind(this);
         this.itemClick.bind(this);

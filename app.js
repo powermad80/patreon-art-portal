@@ -187,7 +187,7 @@ async function SendMail(emails, tiers)
       from: auth.email,
       to: emails[i].email,
       subject: "A Patreon tier you're waiting for is available!",
-      text: GetMailText(emails[i], tiers)
+      html: GetMailText(emails[i], tiers)
     }
     transporter.sendMail(mail);
   }
@@ -197,16 +197,20 @@ async function SendMail(emails, tiers)
 // based on the availability status of every tier the user is subscribed to
 function GetMailText(email, tiers)
 {
-  var text = "The following tier(s) have become available on rtil's Patreon: \n";
+  var text = "";
+  var html = "";
   for (var i = 0; i < email.tiers.length; i++)
   {
     if (tiers.indexOf(email.tiers[i]) != -1)
     {
-      text = text + email.tiers[i] + "\n";
+      text = text + "<li>" + email.tiers[i] + "</li>";
     }
   }
 
-  return text;
+  html = fs.readFileSync("emailtemplate.txt", "utf8");
+  html = html.replace("REPLACEMEWITHLISTITEMS", text);
+
+  return html;
 }
 
 // Cron-like task scheduler, just to run a simple task once a day
